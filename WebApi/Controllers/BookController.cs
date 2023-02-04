@@ -9,6 +9,7 @@ using static WebApi.BookOperations.CreateBook.CreateBookComand;
 using WebApi.BookOperations.GetBookDetail;
 using WebApi.BookOperations.UpdateBook;
 using static WebApi.BookOperations.UpdateBook.UpdateBookCommand;
+using WebApi.BookOperations.DeleteBook;
 
 namespace WebApi.AddControllers
 {
@@ -17,6 +18,9 @@ namespace WebApi.AddControllers
     public class BookController:ControllerBase
     {
         private readonly BookStoreDbContext _context;
+
+        public object DeleteCommandBook { get; private set; }
+
         public BookController(BookStoreDbContext context)
         {
             _context = context;
@@ -110,14 +114,17 @@ namespace WebApi.AddControllers
         [HttpDelete("{id}")]
         public IActionResult DeleteBook(int id)
         {
-            var book= _context.Books.SingleOrDefault(x=>x.Id==id);
-            if(book is null)
-            {
-                return BadRequest();
-            }
-
-            _context.Books.Remove(book);
-            _context.SaveChanges();
+          
+           try
+           {
+              DeleteBookCommand command=new DeleteBookCommand(_context);
+              command.BookId=id;
+              command.Handle();
+           }
+           catch (System.Exception ex)
+           {
+                return BadRequest(ex.Message);            
+           }
             return Ok();
             
         }
