@@ -10,6 +10,9 @@ using WebApi.BookOperations.GetBookDetail;
 using WebApi.BookOperations.UpdateBook;
 using static WebApi.BookOperations.UpdateBook.UpdateBookCommand;
 using WebApi.BookOperations.DeleteBook;
+using AutoMapper;
+using FluentValidation.Results;
+using FluentValidation;
 
 namespace WebApi.AddControllers
 {
@@ -18,12 +21,14 @@ namespace WebApi.AddControllers
     public class BookController:ControllerBase
     {
         private readonly BookStoreDbContext _context;
+        private readonly IMapper _mapper;
 
         public object DeleteCommandBook { get; private set; }
 
-        public BookController(BookStoreDbContext context)
+        public BookController(BookStoreDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
 
@@ -32,7 +37,7 @@ namespace WebApi.AddControllers
         public IActionResult GetBooks()
         {
            // var bookList=_context.Books.OrderBy(x=>x.Id).ToList<Book>();
-            GetBooksQuery query=new GetBooksQuery(_context);
+            GetBooksQuery query=new GetBooksQuery(_context,_mapper);
             var result= query.Handle();
             return Ok(result);
 
@@ -45,8 +50,10 @@ namespace WebApi.AddControllers
             BookDetailViewModel result;
             try
             {
-                GetBookDetailQuery query=new GetBookDetailQuery(_context);
+                GetBookDetailQuery query=new GetBookDetailQuery(_context,_mapper);
                 query.BookId=id;
+                GetBookDetailQueryValidator validator=new GetBookDetailQueryValidator();
+                validator.ValidateAndThrow(query);
                 result=query.Handle();
             }
             catch (Exception ex)
@@ -74,20 +81,25 @@ namespace WebApi.AddControllers
         [HttpPost]
         public IActionResult AddBook([FromBody] CreateBookModel newBook)
         {
-            CreateBookComand comand=new CreateBookComand(_context);
-
+            CreateBookComand comand=new CreateBookComand(_context,_mapper);
             try
             {
                 comand.Model=newBook;
+                CreateBookComandValidator validator=new CreateBookComandValidator();
+                validator.ValidateAndThrow(comand);
                 comand.Handle();
 
+                // ValidationResult result= validator.Validate(comand);
+                // if(!result.IsValid)
+                //     foreach (var item in result.Errors)
+                //         System.Console.WriteLine("Özellik"+item.PropertyName+" - Error Message: "+item.ErrorMessage);
+                // else
+                //     comand.Handle();
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
-
             }
-
             return Ok();
         }
 
@@ -97,11 +109,13 @@ namespace WebApi.AddControllers
         {
             try
             {
-                
                  UpdateBookCommand command=new UpdateBookCommand(_context);
                  command.BookId=id;
                  command.Model=updateBook;
-                command.Handle();
+                 
+                 UpdateBookCommandValidator validator=new UpdateBookCommandValidator();
+                 validator.ValidateAndThrow(command);
+                 command.Handle();
             }
             catch (Exception ex)
             {
@@ -114,11 +128,12 @@ namespace WebApi.AddControllers
         [HttpDelete("{id}")]
         public IActionResult DeleteBook(int id)
         {
-          
            try
            {
               DeleteBookCommand command=new DeleteBookCommand(_context);
               command.BookId=id;
+              DeleteBookCommandValidator validator=new DeleteBookCommandValidator();
+              validator.ValidateAndThrow(command);
               command.Handle();
            }
            catch (System.Exception ex)
@@ -126,8 +141,6 @@ namespace WebApi.AddControllers
                 return BadRequest(ex.Message);            
            }
             return Ok();
-            
         }
-
     }
 }
