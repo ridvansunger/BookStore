@@ -2,6 +2,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
+using WebApi.Entities;
 
 namespace WebApi.DbOperations{
 
@@ -17,6 +18,21 @@ public class DataGenerator
             {
                 return;   // Data was already seeded
             }
+
+            context.Genres.AddRange(
+                new Genre{
+                    Name="Personal Growth",
+
+                },
+                new Genre{
+                    Name="Science",
+
+                },
+                new Genre{
+                    Name="Romance",
+
+                }
+            );
 
             context.Books.AddRange(
                
@@ -41,7 +57,40 @@ public class DataGenerator
                 PageCount=540,
                 PublishDate=new DateTime(2015,12,24)
             });
+
+            context.Authors.AddRange(
+                new Author 
+                    {
+                        Name = "Samet",
+                        LastName = "Şahin",
+                        DateOfBirth = new DateTime(1999,06,07),
+                        BookId = 1
+
+                    
+                    },
+                    new Author 
+                    {
+                        Name = "Remziye",
+                        LastName = "Akın",
+                        DateOfBirth = new DateTime(1999,11,24),
+                        BookId = 2
+                        
+                    },
+                    new Author 
+                    {
+                        Name = "Batu",
+                        LastName = "Ok",
+                        DateOfBirth = new DateTime(1999,10,24),
+                       // BookId = 3
+                        
+                    }
+            );
+
+
             context.SaveChanges();
+
+
+
         };
 
             
